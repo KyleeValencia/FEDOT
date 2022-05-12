@@ -1,11 +1,11 @@
 import datetime
 import gc
 import traceback
-from typing import Callable, List, Optional, Union, Tuple, Collection, Sequence
+from typing import Callable, List, Optional, Sequence, Tuple, Union
 
 from fedot.api.api_utils.assumptions.assumptions_builder import AssumptionsBuilder
 from fedot.api.api_utils.metrics import ApiMetrics
-from fedot.api.api_utils.presets import change_preset_based_on_initial_fit, OperationsPreset
+from fedot.api.api_utils.presets import OperationsPreset, change_preset_based_on_initial_fit
 from fedot.api.time import ApiTime
 from fedot.core.composer.cache import OperationsCache
 from fedot.core.composer.composer_builder import ComposerBuilder
@@ -16,7 +16,6 @@ from fedot.core.data.data import InputData
 from fedot.core.data.data_split import train_test_data_setup
 from fedot.core.data.multi_modal import MultiModalData
 from fedot.core.log import Log
-from fedot.core.optimisers.archive import HallOfFame
 from fedot.core.optimisers.gp_comp.gp_optimiser import GeneticSchemeTypesEnum, GPGraphOptimiserParameters
 from fedot.core.optimisers.gp_comp.operators.crossover import CrossoverTypesEnum
 from fedot.core.optimisers.gp_comp.operators.mutation import MutationTypesEnum
@@ -25,6 +24,7 @@ from fedot.core.pipelines.pipeline import Pipeline
 from fedot.core.repository.operation_types_repository import get_operations_for_task
 from fedot.core.repository.quality_metrics_repository import MetricsRepository, MetricType
 from fedot.core.repository.tasks import Task, TaskTypesEnum
+from fedot.preprocessing.cache import PreprocessingCache
 from fedot.utilities.define_metric_by_task import MetricByTask, TunerMetricByTask
 
 
@@ -32,7 +32,8 @@ class ApiComposer:
 
     def __init__(self, problem: str):
         self.metrics = ApiMetrics(problem)
-        self.cache: Optional[OperationsCache] = None
+        self.pipelines_cache: Optional[OperationsCache] = None
+        self.preprocessing_cache: Optional[PreprocessingCache] = None
         self.preset_name = None
         self.timer = None
 
@@ -90,11 +91,15 @@ class ApiComposer:
             secondary_operations = available_operations
         return primary_operations, secondary_operations
 
-    def init_cache(self, use_cache: bool):
-        if use_cache:
-            self.cache = OperationsCache()
+    def init_cache(self, use_pipelines_cache: bool, use_preprocessing_cache: bool):
+        if use_pipelines_cache:
+            self.pipelines_cache = OperationsCache()
             #  in case of previously generated singleton cache
-            self.cache.reset()
+            self.pipelines_cache.reset()
+        if use_preprocessing_cache:
+            self.preprocessing_cache = PreprocessingCache()
+            #  in case of previously generated singleton cache
+            self.preprocessing_cache.reset()
 
     @staticmethod
     def _init_composer_requirements(api_params: dict,
@@ -175,7 +180,10 @@ class ApiComposer:
             initial_assumption = [initial_assumption]
         fitted_initial_pipeline, init_pipeline_fit_time = \
             fit_and_check_correctness(initial_assumption[0], train_data,
-                                      logger=log, cache=self.cache, n_jobs=api_params['n_jobs'])
+                                      logger=log,
+                                      pipelines_cache=self.pipelines_cache,
+                                      preprocessing_cache=self.preprocessing_cache,
+                                      n_jobs=api_params['n_jobs'])
         log.message(f'Initial pipeline was fitted for {init_pipeline_fit_time.total_seconds()} sec.')
 
         if not preset or preset == 'auto':
@@ -204,7 +212,7 @@ class ApiComposer:
             .with_metrics(metric_function) \
             .with_history(composer_params.get('history_folder')) \
             .with_logger(log) \
-            .with_cache(self.cache)
+            .with_cache(self.pipelines_cache, self.preprocessing_cache)
         gp_composer: GPComposer = builder.build()
 
         if self._have_time_for_composing(init_pipeline_fit_time, composer_params['pop_size']):
@@ -289,7 +297,8 @@ class ApiComposer:
 
 def fit_and_check_correctness(pipeline: Pipeline,
                               data: Union[InputData, MultiModalData],
-                              logger: Log, cache: Optional[OperationsCache] = None, n_jobs=1):
+                              logger: Log, pipelines_cache: Optional[OperationsCache] = None,
+                              preprocessing_cache: Optional[PreprocessingCache] = None, n_jobs=1):
     """ Test is initial pipeline can be fitted on presented data and give predictions """
     try:
         _, data_test = train_test_data_setup(data)
@@ -297,9 +306,14 @@ def fit_and_check_correctness(pipeline: Pipeline,
 
         logger.message('Initial pipeline fitting started')
 
-        pipeline.fit(data, n_jobs=n_jobs)
-        if cache is not None:
-            cache.save_pipeline(pipeline)
+        pipeline.fit(
+            data,
+            use_fitted=pipeline.fit_from_cache(pipelines_cache),
+            n_jobs=n_jobs,
+            preprocessing_cache=preprocessing_cache
+        )
+        if pipelines_cache is not None:
+            pipelines_cache.save_pipeline(pipeline)
         pipeline.predict(data_test)
 
         fit_time = datetime.datetime.now() - start_init_fit
@@ -320,7 +334,7 @@ def _divide_parameters(common_dict: dict) -> List[dict]:
     :param common_dict: dictionary with parameters for all AutoML modules
     """
     api_params_dict = dict(train_data=None, task=Task, logger=Log, timeout=5, initial_assumption=None, n_jobs=1,
-                           use_cache=False)
+                           use_pipelines_cache=False, use_preprocessing_cache=False)
 
     composer_params_dict = dict(max_depth=None, max_arity=None, pop_size=None, num_of_generations=None,
                                 available_operations=None, composer_metric=None, validation_blocks=None,

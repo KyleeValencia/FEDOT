@@ -2,16 +2,11 @@ from copy import deepcopy
 from functools import partial
 from typing import Any, Iterable, List, Optional, Sequence, Union
 
-from tqdm import tqdm
-
 from fedot.core.composer.gp_composer.gp_composer import PipelineComposerRequirements
 from fedot.core.log import Log
 from fedot.core.optimisers.archive import GenerationKeeper
 from fedot.core.optimisers.gp_comp.evaluation import MultiprocessingDispatcher
-from fedot.core.optimisers.gp_comp.gp_operators import (
-    clean_operators_history,
-    random_graph
-)
+from fedot.core.optimisers.gp_comp.gp_operators import clean_operators_history, random_graph
 from fedot.core.optimisers.gp_comp.individual import Individual
 from fedot.core.optimisers.gp_comp.initial_population_builder import InitialPopulationBuilder
 from fedot.core.optimisers.gp_comp.operators.crossover import CrossoverTypesEnum, crossover
@@ -30,6 +25,7 @@ from fedot.core.optimisers.optimizer import GraphGenerationParams, GraphOptimise
 from fedot.core.optimisers.timer import OptimisationTimer
 from fedot.core.pipelines.pipeline import Pipeline
 from fedot.core.utilities.grouped_condition import GroupedCondition
+from tqdm import tqdm
 
 
 class GPGraphOptimiserParameters(GraphOptimiserParameters):
@@ -109,7 +105,8 @@ class EvoGraphOptimiser(GraphOptimiser):
         # stopping_after_n_generation may be None, so use some obvious max number
         max_stagnation_length = parameters.stopping_after_n_generation or requirements.num_of_generations
         self.stop_optimisation = \
-            GroupedCondition(self.log).add_condition(
+            GroupedCondition(self.log) \
+            .add_condition(
                 lambda: self.timer.is_time_limit_reached(self.generations.generation_num),
                 'Optimisation stopped: Time limit is reached'
             ).add_condition(
@@ -193,7 +190,7 @@ class EvoGraphOptimiser(GraphOptimiser):
 
         with self.timer, tqdm(total=self.requirements.num_of_generations,
                               desc='Generations', unit='gen', initial=1,
-                              disable=not show_progress or self.log.verbosity_level == -1):
+                              disable=not show_progress or self.log.verbosity_level <= 0):
 
             # Adding of initial assumptions to history as zero generation
             if self.initial_individuals:

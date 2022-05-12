@@ -1,5 +1,5 @@
 import random
-from typing import Optional, Dict, Union, Any, List
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 
@@ -84,7 +84,7 @@ class ApiParams:
     def _parse_input_params(self, input_params: Dict[str, Any]):
         """ Parses input params into different class fields """
         self.log = default_log('FEDOT logger', verbose_level=input_params['verbose_level'])
-        simple_keys = ['problem', 'n_jobs', 'use_cache']
+        simple_keys = ['problem', 'n_jobs', 'use_pipelines_cache', 'use_preprocessing_cache']
         self.api_params = {k: input_params[k] for k in simple_keys}
         problem = self.api_params['problem']
 

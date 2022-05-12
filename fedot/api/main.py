@@ -1,6 +1,6 @@
 from copy import deepcopy
 from inspect import signature
-from typing import List, Optional, Tuple, Union, Collection, Sequence
+from typing import List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -16,7 +16,6 @@ from fedot.core.data.data import InputData, OutputData
 from fedot.core.data.multi_modal import MultiModalData
 from fedot.core.data.visualisation import plot_biplot, plot_forecast, plot_roc_auc
 from fedot.core.optimisers.opt_history import OptHistory
-from fedot.core.optimisers.archive import HallOfFame
 from fedot.core.pipelines.node import PrimaryNode
 from fedot.core.pipelines.pipeline import Pipeline
 from fedot.core.repository.quality_metrics_repository import MetricsRepository
@@ -82,7 +81,8 @@ class Fedot:
     instead of oneHot encoder if summary cardinality of categorical features is high.
     :param initial_assumption: initial assumption for composer
     :param n_jobs: num of n_jobs for parallelization (-1 for use all cpu's)
-    :param use_cache: bool indicating if it is needed to use pipeline structures caching
+    :param use_pipelines_cache: bool indicating if it is needed to use pipeline structures caching
+    :param use_preprocessing_cache: bool indicating if it is needed to use optional preprocessors caching
     """
 
     def __init__(self,
@@ -95,7 +95,8 @@ class Fedot:
                  safe_mode=True,
                  initial_assumption: Union[Pipeline, List[Pipeline]] = None,
                  n_jobs: int = 1,
-                 use_cache: bool = False
+                 use_pipelines_cache: bool = False,
+                 use_preprocessing_cache: bool = False
                  ):
 
         # Classes for dealing with metrics, data sources and hyperparameters
@@ -107,10 +108,11 @@ class Fedot:
         input_params = {'problem': self.metrics.main_problem, 'preset': preset, 'timeout': timeout,
                         'composer_params': composer_params, 'task_params': task_params,
                         'seed': seed, 'verbose_level': verbose_level,
-                        'initial_assumption': initial_assumption, 'n_jobs': n_jobs, 'use_cache': use_cache}
+                        'initial_assumption': initial_assumption, 'n_jobs': n_jobs,
+                        'use_pipelines_cache': use_pipelines_cache, 'use_preprocessing_cache': use_preprocessing_cache}
         self.params.initialize_params(input_params)
 
-        # Initialize ApiComposer's parameters via ApiParams
+        # Initialize ApiComposer's cache parameters via ApiParams
         self.api_composer.init_cache(**{k: input_params[k] for k in signature(self.api_composer.init_cache).parameters})
 
         # Get metrics for optimization
@@ -422,8 +424,9 @@ class Fedot:
                                                                   if k != 'cut'})
         self.current_pipeline.fit(
             full_train_not_preprocessed,
-            use_fitted=self.current_pipeline.fit_from_cache(self.api_composer.cache),
-            n_jobs=self.params.api_params['n_jobs']
+            use_fitted=self.current_pipeline.fit_from_cache(self.api_composer.pipelines_cache),
+            n_jobs=self.params.api_params['n_jobs'],
+            preprocessing_cache=self.api_composer.preprocessing_cache
         )
 
     def _process_predefined_model(self, predefined_model):
@@ -444,6 +447,7 @@ class Fedot:
         # Perform fitting
         final_pipeline, _ = fit_and_check_correctness(final_pipeline, data=self.train_data,
                                                       logger=self.params.api_params['logger'],
-                                                      cache=self.api_composer.cache,
+                                                      pipelines_cache=self.api_composer.pipelines_cache,
+                                                      preprocessing_cache=self.api_composer.preprocessing_cache,
                                                       n_jobs=self.params.api_params['n_jobs'])
         return final_pipeline
