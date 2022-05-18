@@ -98,7 +98,7 @@ class EvaluationDispatcher(Operator[PopulationT]):
         if fitter.use_remote:
             self.logger.info('Remote fit used')
             restored_graphs = [self._graph_adapter.restore(ind.graph) for ind in population]
-            computed_pipelines = fitter.compute_pipelines(restored_graphs)
+            computed_pipelines = fitter.compute_graphs(restored_graphs)
             self.evaluation_cache = {ind.uid: graph for ind, graph in zip(population, computed_pipelines)}
 
 
