@@ -185,15 +185,15 @@ class EvoGraphOptimiser(GraphOptimiser):
             ind.pop_num = self.generations.generation_num
             ind.ind_num = ind_id
 
-    def optimise(self, objective: ObjectiveFunction,
-                 show_progress: bool = True) -> Sequence[OptGraph]:
+    def optimise(self, objective: ObjectiveFunction) -> Sequence[OptGraph]:
 
         # eval_dispatcher defines how to evaluate objective on the whole population
         evaluator = self.eval_dispatcher.dispatch(objective)
 
-        with self.timer, tqdm(total=self.requirements.num_of_generations,
-                              desc='Generations', unit='gen', initial=1,
-                              disable=not show_progress or self.log.verbosity_level == -1):
+        progressbar = tqdm(total=self.requirements.num_of_generations,
+                           desc='Generations', unit='gen', initial=1,
+                           disable=self.log.verbosity_level == -1)
+        with self.timer, progressbar:
 
             # Adding of initial assumptions to history as zero generation
             if self.initial_individuals:

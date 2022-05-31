@@ -34,7 +34,7 @@ class StaticOptimizer(GraphOptimiser):
         self.change_types = []
         self.node_name = kwargs.get('node_name') or 'logit'
 
-    def optimise(self, objective: ObjectiveFunction, show_progress: bool = True):
+    def optimise(self, objective: ObjectiveFunction):
         graph = OptGraph(OptNode(self.node_name))
         return [graph]
 
