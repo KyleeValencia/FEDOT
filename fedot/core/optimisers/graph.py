@@ -88,19 +88,10 @@ class OptGraph:
     :param log: Log object to record messages
     """
 
-    def __init__(self, nodes: Optional[Union[OptNode, List[OptNode]]] = None,
+    def __init__(self, nodes: Union[OptNode, List[OptNode]] = (),
                  log: Optional[Log] = None):
         self.log = log or default_log(__name__)
-
-        self.nodes = []
-        self.operator = GraphOperator(self, self._empty_postproc)
-
-        if nodes:
-            for node in ensure_wrapped_in_sequence(nodes):
-                self.add_node(node)
-
-    def _empty_postproc(self, nodes=None):
-        pass
+        self.operator = GraphOperator(ensure_wrapped_in_sequence(nodes))
 
     @property
     def _node_adapter(self):
@@ -161,17 +152,17 @@ class OptGraph:
         GraphVisualiser().visualise(self, path)
 
     def __eq__(self, other) -> bool:
-        return self.operator.is_graph_equal(other)
+        return self.operator.__eq__(other)
 
     def __str__(self):
-        return self.operator.graph_description()
+        return str(self.operator.graph_description)
 
     def __repr__(self):
         return self.__str__()
 
     @property
     def root_node(self):
-        roots = self.operator.root_node()
+        roots = self.operator.root_node
         return roots
 
     @property
@@ -184,7 +175,7 @@ class OptGraph:
 
     @property
     def depth(self) -> int:
-        return self.operator.graph_depth()
+        return self.operator.depth
 
     def __copy__(self):
         cls = self.__class__

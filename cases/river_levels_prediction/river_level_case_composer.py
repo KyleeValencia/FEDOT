@@ -29,7 +29,7 @@ def get_pipeline_info(pipeline):
     """
 
     obtained_operations = [str(node) for node in pipeline.nodes]
-    depth = int(pipeline.graph_depth)
+    depth = int(pipeline.depth)
     pipeline.print_structure()
 
     return obtained_operations, depth

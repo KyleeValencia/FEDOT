@@ -1,11 +1,11 @@
 from copy import deepcopy
 from datetime import timedelta
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union, Sequence
 
 import func_timeout
 
 from fedot.core.composer.cache import OperationsCache
-from fedot.core.dag.graph import Graph
+from fedot.core.dag.graph import Graph, GraphDelegate
 from fedot.core.dag.graph_node import GraphNode
 from fedot.core.dag.graph_operator import GraphOperator
 from fedot.core.data.data import InputData, OutputData
@@ -23,7 +23,7 @@ from fedot.preprocessing.preprocessing import DataPreprocessor, update_indices_f
 ERROR_PREFIX = 'Invalid pipeline configuration:'
 
 
-class Pipeline(Graph):
+class Pipeline(GraphDelegate):
     """
     Base class used for composite model structure definition
 
@@ -31,7 +31,7 @@ class Pipeline(Graph):
     :param log: Log object to record messages
     """
 
-    def __init__(self, nodes: Optional[Union[Node, List[Node]]] = None,
+    def __init__(self, nodes: Union[Node, Sequence[Node]] = (),
                  log: Optional[Log] = None):
         self.computation_time = None
         self.template = None
@@ -39,29 +39,31 @@ class Pipeline(Graph):
 
         # Define data preprocessor
         self.preprocessor = DataPreprocessor(self.log)
-        super().__init__(nodes)
-        self.operator = GraphOperator(self, self._graph_nodes_to_pipeline_nodes)
 
-    def _graph_nodes_to_pipeline_nodes(self, nodes: List[Node] = None):
-        """Method to update nodes types after performing some action on the pipeline
-        via GraphOperator, if any of them are GraphNode type"""
+        # forward declaration for capture in the node postprocessing function
+        operator: GraphOperator
 
-        if not nodes:
-            nodes = self.nodes
+        def _graph_nodes_to_pipeline_nodes(nodes: Sequence[Node]):
+            """Method to update nodes types after performing some action on the pipeline
+            via GraphOperator, if any of them are GraphNode type"""
 
-        for node in nodes:
-            if not isinstance(node, GraphNode):
-                continue
-            if node.nodes_from and not isinstance(node, SecondaryNode):
-                self.operator.update_node(old_node=node,
-                                          new_node=SecondaryNode(nodes_from=node.nodes_from,
-                                                                 content=node.content))
-            elif not node.nodes_from and not self.operator.node_children(node) and node != self.root_node:
-                self.nodes.remove(node)
-            elif not node.nodes_from and not isinstance(node, PrimaryNode):
-                self.operator.update_node(old_node=node,
-                                          new_node=PrimaryNode(nodes_from=node.nodes_from,
-                                                               content=node.content))
+            for node in nodes:
+                if not isinstance(node, GraphNode):
+                    continue
+                if node.nodes_from and not isinstance(node, SecondaryNode):
+                    operator.update_node(old_node=node,
+                                         new_node=SecondaryNode(nodes_from=node.nodes_from,
+                                                                content=node.content))
+                # TODO: avoid internaal access use operator.delete_node
+                elif not node.nodes_from and not operator.node_children(node) and node != operator.root_node:
+                    operator._nodes.remove(node)
+                elif not node.nodes_from and not isinstance(node, PrimaryNode):
+                    operator.update_node(old_node=node,
+                                         new_node=PrimaryNode(nodes_from=node.nodes_from,
+                                                              content=node.content))
+
+        operator = GraphOperator(nodes, _graph_nodes_to_pipeline_nodes)
+        super().__init__(operator)
 
     def fit_from_scratch(self, input_data: Union[InputData, MultiModalData] = None):
         """
