@@ -165,12 +165,12 @@ class GraphOperator(Graph):
 
         self._postproc_nodes(self._nodes)
 
+    def root_nodes(self) -> Sequence[GraphNode]:
+        return [node for node in self._nodes if not any(self.node_children(node))]
+
     @property
-    def root_node(self) -> Union[GraphNode, List[GraphNode]]:
-        if not self._nodes:
-            return []
-        roots = [node for node in self._nodes
-                 if not any(self.node_children(node))]
+    def root_node(self) -> Union[GraphNode, Sequence[GraphNode]]:
+        roots = self.root_nodes()
         if len(roots) == 1:
             return roots[0]
         return roots
