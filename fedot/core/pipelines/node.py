@@ -323,8 +323,6 @@ class SecondaryNode(Node):
 
     def __init__(self, operation_type: Optional[Union[str, 'Operation']] = None,
                  nodes_from: Optional[List['Node']] = None, **kwargs):
-        if nodes_from is None:
-            nodes_from = []
         super().__init__(nodes_from=nodes_from, operation_type=operation_type, **kwargs)
 
     def fit(self, input_data: InputData, **kwargs) -> OutputData:
@@ -373,10 +371,7 @@ class SecondaryNode(Node):
         return secondary_input
 
     def _nodes_from_with_fixed_order(self):
-        if self.nodes_from is not None:
-            return sorted(self.nodes_from, key=lambda node: node.descriptive_id)
-        else:
-            return None
+        return sorted(self.nodes_from, key=lambda node: node.descriptive_id)
 
 
 def _combine_parents(parent_nodes: List[Node],

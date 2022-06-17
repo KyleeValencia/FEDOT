@@ -152,7 +152,7 @@ class GraphOperator(Graph):
         invalid vertices and edges or not
         """
 
-        if node_child.nodes_from is None or node_parent not in node_child.nodes_from:
+        if not node_child.nodes_from or node_parent not in node_child.nodes_from:
             return
         elif node_parent not in self._nodes or node_child not in self._nodes:
             return
@@ -207,7 +207,7 @@ class GraphOperator(Graph):
         def _depth_recursive(node: GraphNode):
             if node is None:
                 return 0
-            if node.nodes_from is None or not node.nodes_from:
+            if not node.nodes_from:
                 return 1
             else:
                 return 1 + max(_depth_recursive(next_node) for next_node in node.nodes_from)
