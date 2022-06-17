@@ -26,59 +26,7 @@ def node_ops_adaptation(func):
     return _decorator
 
 
-class OptNode:
-    """
-    Class for node definition in optimization graph (OptGraph)
-
-    :param content: content in node (name only or dict with name and params)
-    :param nodes_from: parent nodes in directed graph
-    """
-
-    def __init__(self, content: Union[str, dict],
-                 nodes_from: Optional[List['OptNode']] = None,
-                 log: Optional[Log] = None
-                 ):
-        default_dict = {'params': DEFAULT_PARAMS_STUB}
-
-        self.log = log or default_log(__name__)
-
-        if isinstance(content, str):
-            content = {'name': content}
-
-        self._nodes_from = UniqueList(nodes_from or ())
-        self.content = {**content, **default_dict}
-        self._operator = NodeOperator(self)
-        self.uid = str(uuid4())
-
-    @property
-    def nodes_from(self) -> List:
-        return self._nodes_from
-
-    @nodes_from.setter
-    def nodes_from(self, nodes: Optional[Iterable['OptNode']]):
-        self._nodes_from = UniqueList(nodes)
-
-    @property
-    def _node_adapter(self):
-        return NodeOperatorAdapter()
-
-    def __str__(self):
-        return str(self.content['name'])
-
-    def __repr__(self):
-        return self.__str__()
-
-    @property
-    def descriptive_id(self):
-        return self._operator.descriptive_id()
-
-    def ordered_subnodes_hierarchy(self, visited=None) -> List['OptNode']:
-        nodes = self._operator.ordered_subnodes_hierarchy(visited)
-        return [self._node_adapter.adapt(node) for node in nodes]
-
-    @property
-    def distance_to_primary_level(self):
-        return self._operator.distance_to_primary_level()
+OptNode = GraphNode
 
 
 class OptGraph(Graph):
