@@ -12,10 +12,11 @@ from fedot.core.utilities.data_structures import ensure_wrapped_in_sequence, rem
 
 # TODO: refactor usages
 class GraphOperator(Graph):
-    def __init__(self, nodes: Sequence['GraphNode'] = (),
+
+    def __init__(self, nodes: Union['GraphNode', Sequence['GraphNode']] = (),
                  postproc_nodes: Optional[Callable[[Sequence['GraphNode']], Any]] = None):
         self._nodes = []
-        for node in nodes:
+        for node in ensure_wrapped_in_sequence(nodes):
             self.add_node(node)
         self._postproc_nodes = postproc_nodes or (lambda x: None)
 
@@ -176,8 +177,12 @@ class GraphOperator(Graph):
         return roots
 
     @property
-    def nodes(self) -> Sequence[GraphNode]:
+    def nodes(self) -> List[GraphNode]:
         return self._nodes
+
+    @nodes.setter
+    def nodes(self, new_nodes: List[GraphNode]):
+        self._nodes = new_nodes
 
     def __eq__(self, other_graph: Graph) -> bool:
         if all(isinstance(rn, list) for rn in [self.root_node, other_graph.root_node]):

@@ -1,12 +1,13 @@
 from copy import deepcopy
-from typing import Any, Iterable, List, Optional, Union
+from typing import Any, Iterable, List, Optional, Union, Sequence
 from uuid import uuid4
 
+from fedot.core.dag.graph import Graph
 from fedot.core.dag.graph_node import GraphNode
 from fedot.core.dag.graph_operator import GraphOperator
 from fedot.core.dag.node_operator import NodeOperator
 from fedot.core.log import Log, default_log
-from fedot.core.utilities.data_structures import UniqueList, ensure_wrapped_in_sequence
+from fedot.core.utilities.data_structures import UniqueList
 from fedot.core.utils import DEFAULT_PARAMS_STUB
 from fedot.core.visualisation.graph_viz import GraphVisualiser
 
@@ -80,7 +81,7 @@ class OptNode:
         return self._operator.distance_to_primary_level()
 
 
-class OptGraph:
+class OptGraph(Graph):
     """
     Base class used for optimized structure
 
@@ -91,7 +92,15 @@ class OptGraph:
     def __init__(self, nodes: Union[OptNode, List[OptNode]] = (),
                  log: Optional[Log] = None):
         self.log = log or default_log(__name__)
-        self.operator = GraphOperator(ensure_wrapped_in_sequence(nodes))
+        self.operator = GraphOperator(nodes)
+
+    @property
+    def nodes(self) -> List[OptNode]:
+        return self.operator.nodes
+
+    @nodes.setter
+    def nodes(self, new_nodes: List[OptNode]):
+        self.operator.nodes = new_nodes
 
     @property
     def _node_adapter(self):
