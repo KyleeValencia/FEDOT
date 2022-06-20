@@ -10,14 +10,20 @@ from fedot.core.pipelines.convert import graph_structure_as_nx_graph
 from fedot.core.utilities.data_structures import ensure_wrapped_in_sequence, remove_items, Copyable
 
 
+NodePostprocessCallable = Callable[[Graph, Sequence[GraphNode]], Any]
+
+
 class GraphOperator(Graph, Copyable):
 
     def __init__(self, nodes: Union[GraphNode, Sequence[GraphNode]] = (),
-                 postproc_nodes: Optional[Callable[[Sequence[GraphNode]], Any]] = None):
+                 postproc_nodes: Optional[NodePostprocessCallable] = None):
         self._nodes = []
         for node in ensure_wrapped_in_sequence(nodes):
             self.add_node(node)
-        self._postproc_nodes = postproc_nodes or (lambda x: None)
+        self._postproc_nodes = postproc_nodes or self._empty_postproc
+
+    def _empty_postproc(self, *args):
+        pass
 
     def delete_node(self, node: GraphNode):
         node_children_cached = self.node_children(node)
@@ -31,7 +37,7 @@ class GraphOperator(Graph, Copyable):
                 node_children_cached[0].nodes_from.append(node_from)
         self._nodes.clear()
         self.add_node(self_root_node_cached)
-        self._postproc_nodes(self._nodes)
+        self._postproc_nodes(self, self._nodes)
 
     def delete_subtree(self, node: GraphNode):
         """Delete node with all the parents it has.
@@ -54,7 +60,7 @@ class GraphOperator(Graph, Copyable):
         self._nodes.remove(old_node)
         self._nodes.append(new_node)
         self.sort_nodes()
-        self._postproc_nodes(self._nodes)
+        self._postproc_nodes(self, self._nodes)
 
     def update_subtree(self, old_node: GraphNode, new_node: GraphNode):
         new_node = deepcopy(new_node)
@@ -163,7 +169,7 @@ class GraphOperator(Graph, Copyable):
         if is_clean_up_leftovers:
             self._clean_up_leftovers(node_parent)
 
-        self._postproc_nodes(self._nodes)
+        self._postproc_nodes(self, self._nodes)
 
     def root_nodes(self) -> Sequence[GraphNode]:
         return [node for node in self._nodes if not any(self.node_children(node))]

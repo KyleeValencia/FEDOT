@@ -5,7 +5,6 @@ from typing import Callable, List, Optional, Tuple, Union, Sequence
 import func_timeout
 
 from fedot.core.composer.cache import OperationsCache
-from fedot.core.dag.graph import Graph
 from fedot.core.dag.graph_delegate import GraphDelegate
 from fedot.core.dag.graph_node import GraphNode
 from fedot.core.dag.graph_operator import GraphOperator
@@ -42,27 +41,6 @@ class Pipeline(GraphDelegate):
         self.preprocessor = DataPreprocessor(self.log)
 
         # forward declaration for capture in the node postprocessing function
-        operator: GraphOperator
-
-        def _graph_nodes_to_pipeline_nodes(nodes: Sequence[Node]):
-            """Method to update nodes types after performing some action on the pipeline
-            via GraphOperator, if any of them are GraphNode type"""
-
-            for node in nodes:
-                if not isinstance(node, GraphNode):
-                    continue
-                if node.nodes_from and not isinstance(node, SecondaryNode):
-                    operator.update_node(old_node=node,
-                                         new_node=SecondaryNode(nodes_from=node.nodes_from,
-                                                                content=node.content))
-                # TODO: avoid internaal access use operator.delete_node
-                elif not node.nodes_from and not operator.node_children(node) and node != operator.root_node:
-                    operator._nodes.remove(node)
-                elif not node.nodes_from and not isinstance(node, PrimaryNode):
-                    operator.update_node(old_node=node,
-                                         new_node=PrimaryNode(nodes_from=node.nodes_from,
-                                                              content=node.content))
-
         operator = GraphOperator(nodes, _graph_nodes_to_pipeline_nodes)
         super().__init__(operator)
 
@@ -368,3 +346,23 @@ def _replace_n_jobs_in_nodes(pipeline: Pipeline, n_jobs: int):
             node.content['params']['n_jobs'] = n_jobs
         if 'num_threads' in node.content['params']:
             node.content['params']['num_threads'] = n_jobs
+
+
+def _graph_nodes_to_pipeline_nodes(operator: GraphOperator, nodes: Sequence[Node]):
+    """Method to update nodes types after performing some action on the pipeline
+    via GraphOperator, if any of them are GraphNode type"""
+
+    for node in nodes:
+        if not isinstance(node, GraphNode):
+            continue
+        if node.nodes_from and not isinstance(node, SecondaryNode):
+            operator.update_node(old_node=node,
+                                 new_node=SecondaryNode(nodes_from=node.nodes_from,
+                                                        content=node.content))
+        # TODO: avoid internal access use operator.delete_node
+        elif not node.nodes_from and not operator.node_children(node) and node != operator.root_node:
+            operator._nodes.remove(node)
+        elif not node.nodes_from and not isinstance(node, PrimaryNode):
+            operator.update_node(old_node=node,
+                                 new_node=PrimaryNode(nodes_from=node.nodes_from,
+                                                      content=node.content))
