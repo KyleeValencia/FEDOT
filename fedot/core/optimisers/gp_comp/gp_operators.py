@@ -22,9 +22,7 @@ def random_graph(verifier: GraphVerifier,
 
     while not is_correct_graph:
         graph = OptGraph()
-        graph_root = OptNode(nodes_from=[],
-                             content={'name': choice(requirements.secondary),
-                                      'params': DEFAULT_PARAMS_STUB})
+        graph_root = OptNode(content={'name': choice(requirements.secondary)})
         graph.add_node(graph_root)
         graph_growth(graph, graph_root, requirements, max_depth)
         is_correct_graph = verifier(graph)
@@ -56,15 +54,11 @@ def graph_growth(graph: OptGraph, node_parent: OptNode, requirements, max_depth:
         is_max_depth_exceeded = height >= max_depth - 1
         is_primary_node_selected = height < max_depth - 1 and randint(0, 1)
         if is_max_depth_exceeded or is_primary_node_selected:
-            primary_node = OptNode(nodes_from=None,
-                                   content={'name': choice(requirements.primary),
-                                            'params': DEFAULT_PARAMS_STUB})
+            primary_node = OptNode(content={'name': choice(requirements.primary)})
             node_parent.nodes_from.append(primary_node)
             graph.add_node(primary_node)
         else:
-            secondary_node = OptNode(nodes_from=[],
-                                     content={'name': choice(requirements.secondary),
-                                              'params': DEFAULT_PARAMS_STUB})
+            secondary_node = OptNode(content={'name': choice(requirements.secondary)})
             graph.add_node(secondary_node)
             node_parent.nodes_from.append(secondary_node)
             graph_growth(graph, secondary_node, requirements, max_depth)
