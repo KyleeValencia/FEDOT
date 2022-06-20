@@ -7,14 +7,13 @@ from networkx import graph_edit_distance, set_node_attributes
 from fedot.core.dag.graph import Graph
 from fedot.core.dag.graph_node import GraphNode
 from fedot.core.pipelines.convert import graph_structure_as_nx_graph
-from fedot.core.utilities.data_structures import ensure_wrapped_in_sequence, remove_items
+from fedot.core.utilities.data_structures import ensure_wrapped_in_sequence, remove_items, Copyable
 
 
-# TODO: refactor usages
-class GraphOperator(Graph):
+class GraphOperator(Graph, Copyable):
 
-    def __init__(self, nodes: Union['GraphNode', Sequence['GraphNode']] = (),
-                 postproc_nodes: Optional[Callable[[Sequence['GraphNode']], Any]] = None):
+    def __init__(self, nodes: Union[GraphNode, Sequence[GraphNode]] = (),
+                 postproc_nodes: Optional[Callable[[Sequence[GraphNode]], Any]] = None):
         self._nodes = []
         for node in ensure_wrapped_in_sequence(nodes):
             self.add_node(node)
