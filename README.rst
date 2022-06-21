@@ -21,14 +21,14 @@
 
 .. end-badges
 
-This repository contains FEDOT - an open-source framework for automated modeling and machine learning (AutoML). It can build custom modeling pipelines for different real-world processes in an automated way using an evolutionary approach. FEDOT supports classification (binary and multiclass), regression, clustering, and time series prediction tasks.
+FEDOT - an open-source framework for automated modeling and machine learning (AutoML). Automatically, it can build custom modeling pipelines for various real-world problems using an evolutionary approach. FEDOT supports classification (binary and multiclass), regression, clustering, and time series prediction tasks.
 
 .. image:: https://itmo-nss-team.github.io/FEDOT.Docs/img/pipeline_small.png
    :alt: The structure of the modeling pipeline that can be optimised by FEDOT
 
-The main feature of the framework is the complex management of interactions between various blocks of pipelines. First of all, this includes the stage of machine learning model design. FEDOT allows you to not just choose the best type of the model, but to create a complex (composite) model. It allows you to combine several models of different complexity, which helps you to achieve better modeling quality than when using any of these models separately. Within the framework, we describe composite models in the form of a graph defining the connections between data preprocessing blocks and model blocks.
+The main feature of the framework is the complex management of interactions between various blocks of pipelines. First of all, this includes the stage of machine learning model design. FEDOT allows you to create composite Pipelines. It is represented as a graph defining the connections between data preprocessing and model blocks. All of it helps you reach better results than using models separately.
 
-The framework is not limited to specific AutoML tasks (such as pre-processing of input data, feature selection, or optimization of model hyperparameters), but allows you to solve a more general structural learning problem - for a given data set, a solution is built in the form of a graph (DAG), the nodes of which are represented by ML models, pre-processing procedures, and data transformation.
+The framework is not limited to specific AutoML tasks (such as input data preprocessing, feature selection, or model hyperparameters optimization) and allows you to solve a more general structural learning problem. For an input dataset, a solution is built in the form of a graph (DAG), where nodes are machine learning models, preprocessing operations, and data transformation.
 
 The project is maintained by the research team of the Natural Systems Simulation Lab, which is a part of the National Center for Cognitive Research of ITMO University.
 
@@ -40,23 +40,23 @@ The intro video about Fedot is available here:
    :target: http://www.youtube.com/watch?v=RjbuV6i6de4
    :alt: Introducing Fedot
 
-FEDOT features
+FEDOT Features
 ==============
 
 The main features of the framework are as follows:
 
-- The FEDOT architecture is highly flexible and therefore the framework can be used to automate the creation of mathematical models for various problems, types of data, and models;
-- FEDOT already supports popular ML libraries (scikit-learn, keras, statsmodels, etc.), but you can also integrate custom tools into the framework if necessary;
+- FEDOT is highly flexible: can be used to automate the construction of mathematical models for various problems, data types, and models;
+- FEDOT already supports widely used ML libraries (Scikit-Learn, Keras, Statsmodels, etc.) and it allows to integrate your custom ones;
 - Pipeline optimization algorithms are not tied to specific data types or tasks, but you can use special templates for a specific task class or data type (time series forecasting, NLP, tabular data, etc.) to increase the efficiency;
-- The framework is not limited only to machine learning, it is possible to embed models related to specific areas into pipelines (for example, models in ODE or PDE);
-- Additional methods for hyperparameters tuning can be seamlessly integrated into FEDOT (in addition to those already supported);
-- The resulting pipelines can be exported in a human-readable JSON format, which allows you to achieve reproducibility of the experiments.
+- The framework is not limited only to machine learning problems. It is possible to embed models related to specific areas into pipelines (for example, models in ODE or PDE);
+- Hyperparameter tuning methods are supported. Custom methods can also be integrated in FEDOT;
+- You can export the resulting pipelines in JSON format for experiment reproducibility.
 
-Thus, compared to other frameworks, FEDOT:
+Accordingly, compared to other frameworks, FEDOT:
 
-- Is not limited to specific modeling tasks and claims versatility and expandability;
+- There are no limits to specific modeling tasks and claims versatility and expandability;
 - Allows managing the complexity of models and thereby achieving better results.
-- Allows building models using input data of various nature (texts, images, tables, etc.) and consisting of different types of models.
+- Allows building models using widely types of input data (texts, images, tables, etc.) and consisting of various models.
 
 Installation
 ============
@@ -67,7 +67,7 @@ Common installation:
 
   $ pip install fedot
 
-Install with all optional dependencies (mandatory for working with image/text data and loading tests):
+Install with all optional dependencies (required to working with image/text data and loading tests):
 
 .. code-block::
 
@@ -95,10 +95,7 @@ Or if you want to install FEDOT with all optional dependencies from source code:
 How to use
 ============================
 
-FEDOT provides a high-level API that allows you to use its capabilities in a simple way.
-At the moment, the API can be used for classification and regression tasks only.
-But the time series forecasting and clustering support will be implemented soon (you can still solve these tasks via advanced initialization, see below).
-Input data must be either in NumPy arrays or CSV files.
+FEDOT provides a high-level API that allows you to use its capabilities in a simple way. API can be used for classification, regression, time series forecasting and clustering.
 
 To use the API, follow these steps:
 
@@ -108,11 +105,11 @@ To use the API, follow these steps:
 
  from fedot.api.main import Fedot
 
-2. Initialize the Fedot object and define the type of modeling problem. It provides a fit/predict interface:
+2. Initialize the Fedot object and define the type of modeling problem. It provides a fit / predict interface:
 
-- fedot.fit runs the optimization and returns the resulting composite model;
-- fedot.predict returns the prediction for the given input data;
-- fedot.get_metrics estimates the quality of predictions using selected metrics
+- **Fedot.fit(...)** runs the optimization and returns the resulting composite model;
+- **Fedot.predict(...)** returns the prediction for the given input data;
+- **Fedot.get_metrics(...)** estimates the quality of predictions using selected metrics
 
 Numpy arrays, pandas data frames, and file paths can be used as sources of input data.
 
