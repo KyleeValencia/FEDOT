@@ -15,7 +15,7 @@ from fedot.core.constants import DEFAULT_TUNING_ITERATIONS_NUMBER, MINIMAL_SECON
 from fedot.core.data.data import InputData
 from fedot.core.data.data_split import train_test_data_setup
 from fedot.core.data.multi_modal import MultiModalData
-from fedot.core.log import Log
+from fedot.core.log import Log, LoggerAdapter
 from fedot.core.optimisers.archive import HallOfFame
 from fedot.core.optimisers.gp_comp.gp_optimiser import GeneticSchemeTypesEnum, GPGraphOptimiserParameters
 from fedot.core.optimisers.gp_comp.operators.crossover import CrossoverTypesEnum
@@ -210,7 +210,7 @@ class ApiComposer:
         if self._have_time_for_composing(init_pipeline_fit_time, composer_params['pop_size']):
             # Launch pipeline structure composition
             with self.timer.launch_composing():
-                log.message(f'Pipeline composition started.')
+                log.info(f'Pipeline composition started.')
                 best_pipelines = gp_composer.compose_pipeline(data=train_data)
                 best_pipeline_candidates = gp_composer.best_models
         else:
@@ -263,7 +263,7 @@ class ApiComposer:
                 # Default metric for tuner
                 tune_metrics = TunerMetricByTask(task.task_type)
                 tuner_loss, loss_params = tune_metrics.get_metric_and_params(train_data)
-                log.message(f'Tuner metric is None, {tuner_loss.__name__} is set as default')
+                log.info(f'Tuner metric is None, {tuner_loss.__name__} is set as default')
             else:
                 # Get metric and parameters by name
                 loss_params = None
@@ -271,7 +271,7 @@ class ApiComposer:
 
             # Tune all nodes in the pipeline
             with self.timer.launch_tuning():
-                log.message('Hyperparameters tuning started')
+                log.info('Hyperparameters tuning started')
                 vb_number = composer_requirements.validation_blocks
                 folds = composer_requirements.cv_folds
                 timeout_for_tuning = abs(timeout_for_tuning) / 60
@@ -283,19 +283,19 @@ class ApiComposer:
                                         timeout=timeout_for_tuning,
                                         cv_folds=folds,
                                         validation_blocks=vb_number)
-                log.message('Hyperparameters tuning finished')
+                log.info('Hyperparameters tuning finished')
         return pipeline_gp_composed
 
 
 def fit_and_check_correctness(pipeline: Pipeline,
                               data: Union[InputData, MultiModalData],
-                              logger: Log, cache: Optional[OperationsCache] = None, n_jobs=1):
+                              logger: LoggerAdapter, cache: Optional[OperationsCache] = None, n_jobs=1):
     """ Test is initial pipeline can be fitted on presented data and give predictions """
     try:
         _, data_test = train_test_data_setup(data)
         start_init_fit = datetime.datetime.now()
 
-        logger.message('Initial pipeline fitting started')
+        logger.info('Initial pipeline fitting started')
 
         pipeline.fit(data, n_jobs=n_jobs)
         if cache is not None:
@@ -303,7 +303,7 @@ def fit_and_check_correctness(pipeline: Pipeline,
         pipeline.predict(data_test)
 
         fit_time = datetime.datetime.now() - start_init_fit
-        logger.message('Initial pipeline was fitted successfully')
+        logger.info('Initial pipeline was fitted successfully')
     except Exception as ex:
         fit_failed_info = f'Initial pipeline fit was failed due to: {ex}.'
         advice_info = f'{fit_failed_info} Check pipeline structure and the correctness of the data'

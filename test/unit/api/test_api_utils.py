@@ -1,5 +1,6 @@
-import random
 from copy import deepcopy
+import random
+import re
 
 from testfixtures import LogCapture
 
@@ -47,8 +48,8 @@ def test_compose_fedot_model_with_tuning():
                                                          tuning_params=dict(with_tuning=True,
                                                                             tuner_metric=None),
                                                          preset='fast_train')
-    expected = ('test_log', 'INFO', 'Composed pipeline returned without tuning.')
-    logs.check_present(expected, order_matters=False)
+    # TODO make assert more specific
+    assert 'Composed pipeline returned without tuning.' in str(logs)
 
 
 def test_output_binary_classification_correct():
