@@ -176,7 +176,7 @@ class ApiComposer:
         fitted_initial_pipeline, init_pipeline_fit_time = \
             fit_and_check_correctness(initial_assumption[0], train_data,
                                       logger=log, cache=self.cache, n_jobs=api_params['n_jobs'])
-        log.message(f'Initial pipeline was fitted for {init_pipeline_fit_time.total_seconds()} sec.')
+        log.info(f'Initial pipeline was fitted for {init_pipeline_fit_time.total_seconds()} sec.')
 
         if not preset or preset == 'auto':
             preset = change_preset_based_on_initial_fit(init_pipeline_fit_time, timeout)
@@ -190,7 +190,7 @@ class ApiComposer:
 
         metric_function = self.obtain_metric(task, composer_params['composer_metric'])
 
-        log.message(f"AutoML configured."
+        log.info(f"AutoML configured."
                     f" Parameters tuning: {with_tuning}."
                     f" Time limit: {timeout} min."
                     f" Set of candidate models: {available_operations}.")
@@ -215,7 +215,7 @@ class ApiComposer:
                 best_pipeline_candidates = gp_composer.best_models
         else:
             # Use initial pipeline as final solution
-            log.message(f'Timeout is too small for composing and is skipped '
+            log.info(f'Timeout is too small for composing and is skipped '
                         f'because fit_time is {init_pipeline_fit_time.total_seconds()} sec.')
             best_pipelines = fitted_initial_pipeline
             best_pipeline_candidates = [fitted_initial_pipeline]
@@ -237,7 +237,7 @@ class ApiComposer:
         # enforce memory cleaning
         gc.collect()
 
-        log.message('Model generation finished')
+        log.info('Model generation finished')
         return best_pipeline, best_pipeline_candidates, gp_composer.history
 
     def _have_time_for_composing(self, init_pipeline_fit_time: datetime.timedelta, pop_size: int) -> bool:
