@@ -250,9 +250,7 @@ def single_add_mutation(graph: Any, requirements, params, max_depth, *args, **kw
     single_add_strategies = [_add_as_child, _add_separate_parent_node]
     if node_to_mutate.nodes_from:
         single_add_strategies.append(_add_intermediate_node)
-    # strategy = choice(single_add_strategies)
-    strategy = _add_as_child
-    # strategy = _add_separate_parent_node
+    strategy = choice(single_add_strategies)
 
     result = strategy(graph, requirements, params, node_to_mutate)
     return result
