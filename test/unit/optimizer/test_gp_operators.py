@@ -389,8 +389,10 @@ def test_boosting_mutation_for_linear_graph():
                                             ind=Individual(linear_one_node),
                                             requirements=composer_requirements,
                                             log=default_log(__name__), max_depth=2).graph
-            successful_mutation_boosting = \
-                graph_after_mutation.root_node.descriptive_id == boosting_graph.root_node.descriptive_id
+            id_act = graph_after_mutation.root_node.descriptive_id
+            id_exp = boosting_graph.root_node.descriptive_id
+            successful_mutation_boosting = id_act == id_exp
+            print(f'iter {_}: result={successful_mutation_boosting}; graph={graph_after_mutation.descriptive_id}')
         else:
             break
     assert successful_mutation_boosting
