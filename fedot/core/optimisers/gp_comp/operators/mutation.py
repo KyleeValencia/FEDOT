@@ -10,7 +10,6 @@ from fedot.core.log import Log
 from fedot.core.optimisers.gp_comp.gp_operators import random_graph
 from fedot.core.optimisers.gp_comp.individual import Individual, ParentOperator
 from fedot.core.optimisers.graph import OptGraph
-from fedot.core.pipelines.pipeline_node_factory import PipelineOptNodeFactory
 from fedot.core.utilities.data_structures import ComparableEnum as Enum
 
 if TYPE_CHECKING:
@@ -19,7 +18,6 @@ if TYPE_CHECKING:
 MAX_NUM_OF_ATTEMPTS = 100
 MAX_MUT_CYCLES = 5
 STATIC_MUTATION_PROBABILITY = 0.7
-node_factory = PipelineOptNodeFactory()
 
 
 class MutationTypesEnum(Enum):
@@ -148,7 +146,7 @@ def mutation(types: List[Union[MutationTypesEnum, Callable]], params: 'GraphGene
     return deepcopy(ind)
 
 
-def simple_mutation(graph: Any, requirements, **kwargs) -> Any:
+def simple_mutation(graph: Any, requirements, params, **kwargs) -> Any:
     """
     This type of mutation is passed over all nodes of the tree started from the root node and changes
     nodes’ operations with probability - 'node mutation probability'
@@ -157,7 +155,7 @@ def simple_mutation(graph: Any, requirements, **kwargs) -> Any:
 
     def replace_node_to_random_recursive(node: Any) -> Any:
         if random() < node_mutation_probability:
-            new_node = node_factory.change_node(node, requirements)
+            new_node = params.node_factory.change_node(node, requirements)
             if not new_node:
                 graph.update_node(node, new_node)
             if node.nodes_from:
@@ -194,7 +192,7 @@ def single_edge_mutation(graph: Any, max_depth, *args, **kwargs):
 
 def _add_intermediate_node(graph: Any, requirements, params, node_to_mutate):
     # add between node and parent
-    new_node = node_factory.get_intermediate_parent_node(node_to_mutate, requirements, params.advisor)
+    new_node = params.node_factory.get_intermediate_parent_node(node_to_mutate, requirements, params.advisor)
     if not new_node:
         return graph
     new_node.nodes_from = node_to_mutate.nodes_from
@@ -206,7 +204,7 @@ def _add_intermediate_node(graph: Any, requirements, params, node_to_mutate):
 def _add_separate_parent_node(graph: Any, requirements, params, node_to_mutate):
     # add as separate parent
     for iter_num in range(randint(1, 3)):
-        new_node = node_factory.get_separate_parent_node(node_to_mutate, requirements, params.advisor)
+        new_node = params.node_factory.get_separate_parent_node(node_to_mutate, requirements, params.advisor)
         if not new_node:
             # there is no possible mutations
             break
@@ -220,7 +218,7 @@ def _add_separate_parent_node(graph: Any, requirements, params, node_to_mutate):
 
 def _add_as_child(graph: Any, requirements, params, node_to_mutate):
     # add as child
-    new_node = node_factory.get_child_node(requirements)
+    new_node = params.node_factory.get_child_node(requirements)
     if not new_node:
         return graph
     new_node.nodes_from = [node_to_mutate]
@@ -254,7 +252,7 @@ def single_change_mutation(graph: Any, requirements, params, *args, **kwargs):
     Change node between two sequential existing modes
     """
     node = choice(graph.nodes)
-    new_node = node_factory.change_node(node, requirements, params.advisor)
+    new_node = params.node_factory.change_node(node, requirements, params.advisor)
     if not new_node:
         return graph
     graph.update_node(node, new_node)
@@ -308,7 +306,7 @@ def _tree_growth(graph: Any, requirements, params, max_depth: int, local_growth=
             randint(0, 1) and \
             not graph.operator.distance_to_root_level(node_from_graph) < max_depth
     if is_primary_node_selected:
-        new_subtree = node_factory.get_primary_node(requirements)
+        new_subtree = params.node_factory.get_primary_node(requirements)
         if not new_subtree:
             return graph
     else:
@@ -337,7 +335,7 @@ def growth_mutation(graph: Any, requirements, params, max_depth: int, local_grow
         return _tree_growth(graph, requirements, params, max_depth, local_growth)
 
 
-def reduce_mutation(graph: OptGraph, requirements, **kwargs) -> OptGraph:
+def reduce_mutation(graph: OptGraph, requirements, params, **kwargs) -> OptGraph:
     """
     Selects a random node in a tree, then removes its subtree. If the current arity of the node's
     parent is more than the specified minimal arity, then the selected node is also removed.
@@ -353,7 +351,7 @@ def reduce_mutation(graph: OptGraph, requirements, **kwargs) -> OptGraph:
     if is_possible_to_delete:
         graph.delete_subtree(node_to_del)
     else:
-        primary_node = node_factory.get_primary_node(requirements)
+        primary_node = params.node_factory.get_primary_node(requirements)
         if not primary_node:
             return graph
         graph.update_subtree(node_to_del, primary_node)

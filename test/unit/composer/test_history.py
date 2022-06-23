@@ -25,6 +25,7 @@ from fedot.core.optimisers.opt_history import OptHistory
 from fedot.core.optimisers.optimizer import GraphGenerationParams
 from fedot.core.pipelines.node import PrimaryNode, SecondaryNode
 from fedot.core.pipelines.pipeline import Pipeline
+from fedot.core.pipelines.pipeline_node_factory import PipelineOptNodeFactory
 from fedot.core.repository.quality_metrics_repository import ClassificationMetricsEnum, \
     RegressionMetricsEnum, MetricType
 from fedot.core.repository.tasks import Task, TaskTypesEnum
@@ -68,7 +69,8 @@ def test_ancestor_for_mutation():
 
     graph_params = GraphGenerationParams(adapter=PipelineAdapter(),
                                          advisor=PipelineChangeAdvisor(task=Task(TaskTypesEnum.regression)),
-                                         rules_for_constraint=DEFAULT_DAG_RULES)
+                                         rules_for_constraint=DEFAULT_DAG_RULES,
+                                         node_factory=PipelineOptNodeFactory())
     available_operations = ['linear']
     composer_requirements = PipelineComposerRequirements(primary=available_operations,
                                                          secondary=available_operations, mutation_prob=1)
@@ -92,7 +94,8 @@ def test_ancestor_for_crossover():
 
     graph_params = GraphGenerationParams(adapter=PipelineAdapter(),
                                          advisor=PipelineChangeAdvisor(task=Task(TaskTypesEnum.regression)),
-                                         rules_for_constraint=DEFAULT_DAG_RULES)
+                                         rules_for_constraint=DEFAULT_DAG_RULES,
+                                         node_factory=PipelineOptNodeFactory())
 
     crossover_results = crossover([CrossoverTypesEnum.subtree],
                                   parent_ind_first, parent_ind_second,
