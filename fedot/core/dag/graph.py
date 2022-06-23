@@ -61,38 +61,34 @@ class Graph(ABC):
         """
         raise NotImplementedError()
 
+    @abstractmethod
     def __eq__(self, other) -> bool:
         # return self.operator.is_graph_equal(other)
         raise NotImplementedError()
 
-    def __str__(self):
-        return str(self.graph_description)
-
-    def __repr__(self):
-        return self.__str__()
-
-    def __len__(self):
-        return self.length
-
     @property
+    @abstractmethod
     def root_node(self) -> Union[GraphNode, Sequence[GraphNode]]:
         raise NotImplementedError()
 
     @property
+    @abstractmethod
     def nodes(self) -> List['GraphNode']:
         raise NotImplementedError()
 
     @nodes.setter
+    @abstractmethod
     def nodes(self, new_nodes: List['GraphNode']):
+        raise NotImplementedError()
+
+    @property
+    @abstractmethod
+    def depth(self) -> int:
         raise NotImplementedError()
 
     @property
     def length(self) -> int:
         return len(self.nodes)
-
-    @property
-    def depth(self) -> int:
-        raise NotImplementedError()
 
     def show(self, path: str = None):
         GraphVisualiser().visualise(self, path)
@@ -104,3 +100,16 @@ class Graph(ABC):
             'length': self.length,
             'nodes': self.nodes,
         }
+
+    @property
+    def descriptive_id(self) -> str:
+        return self.root_node.descriptive_id
+
+    def __str__(self):
+        return str(self.graph_description)
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __len__(self):
+        return self.length
