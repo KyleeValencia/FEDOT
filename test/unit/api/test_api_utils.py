@@ -103,7 +103,6 @@ def test_the_formation_of_initial_assumption():
 
     initial_assumptions = AssumptionsBuilder \
         .get(Task(TaskTypesEnum.classification), train_input) \
-        .with_logger(logger) \
         .from_operations(available_operations) \
         .build()
     res_init_assumption = Pipeline(PrimaryNode('dt'))
@@ -121,7 +120,6 @@ def test_init_assumption_with_inappropriate_available_operations():
 
     initial_assumptions = AssumptionsBuilder \
         .get(Task(TaskTypesEnum.classification), train_input) \
-        .with_logger(logger) \
         .from_operations(available_operations) \
         .build()
     primary = PrimaryNode('scaling')
