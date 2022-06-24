@@ -1,6 +1,6 @@
 from copy import deepcopy
 from inspect import signature
-from typing import List, Optional, Tuple, Union, Collection, Sequence
+from typing import List, Optional, Tuple, Union, Sequence
 
 import numpy as np
 import pandas as pd
@@ -16,7 +16,6 @@ from fedot.core.data.data import InputData, OutputData
 from fedot.core.data.multi_modal import MultiModalData
 from fedot.core.data.visualisation import plot_biplot, plot_forecast, plot_roc_auc
 from fedot.core.optimisers.opt_history import OptHistory
-from fedot.core.optimisers.archive import HallOfFame
 from fedot.core.pipelines.node import PrimaryNode
 from fedot.core.pipelines.pipeline import Pipeline
 from fedot.core.repository.quality_metrics_repository import MetricsRepository
@@ -43,7 +42,6 @@ class Fedot:
         - classification
         - regression
         - ts_forecasting
-        - clustering
     :param preset: name of preset for model building (e.g. 'best_quality', 'fast_train', 'gpu')
         - 'best_quality' - All models that are available for this data type and task are used
         - 'fast_train' - Models that learn quickly. This includes preprocessing operations
