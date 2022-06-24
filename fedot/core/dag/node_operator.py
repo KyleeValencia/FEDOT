@@ -61,7 +61,7 @@ def _descriptive_id_recursive(current_node, visited_nodes) -> str:
     if current_node.nodes_from:
         previous_items = []
         for parent_node in current_node.nodes_from:
-            previous_items.append(f'{_descriptive_id_recursive(copy(parent_node), copy(visited_nodes))};')
+            previous_items.append(_descriptive_id_recursive(parent_node, visited_nodes))
         previous_items.sort()
         previous_items_str = ';'.join(previous_items)
 
